@@ -1,56 +1,59 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
+import axios from 'axios';
 
-const App = () => {
-  const [city, setCity] = useState(""); // Foydalanuvchi kiritgan shahar
-  const [weather, setWeather] = useState(null); // API dan kelgan ob-havo ma'lumoti
-  const [error, setError] = useState(""); // Xatolik xabari
+function App() {
+  const [inputText, setInputText] = useState('');
+  const [responseText, setResponseText] = useState('');
 
-  const DEEPSEEK_API_KEY = "sk-6420a69a5bc746179bb4e1f630ffb958"; // Deepseek API kaliti
-  const DEEPSEEK_API_URL = `https://api.deepseek.com/v1/weather`; // Deepseek API manzili
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // Ob-havo ma'lumotlarini olish funksiyasi
-  const fetchWeather = async () => {
     try {
-      const response = await axios.get(DEEPSEEK_API_URL, {
-        params: {
-          city: city,
-          api_key: DEEPSEEK_API_KEY,
-          units: "metric", // Haroratni °C da olish uchun
+      const response = await axios.post(
+        'https://api.openai.com/v1/completions',
+        {
+          model: "text-davinci-003", // GPT-3 modeli
+          prompt: inputText,
+          max_tokens: 100,
         },
-      });
-      setWeather(response.data);
-      setError("");
-    } catch (err) {
-      setError("Shahar topilmadi yoki xatolik yuz berdi.");
-      setWeather(null);
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer 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    `, // API kalitingizni shu yerga qo'ying
+          },
+        }
+      );
+
+      setResponseText(response.data.choices[0].text.trim());
+    } catch (error) {
+      console.error('Xatolik yuz berdi:', error);
+      setResponseText('Xatolik yuz berdi, iltimos keyinroq urinib ko\'ring.');
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Ob-havo Dasturi</h1>
-      <input
-        type="text"
-        placeholder="Shahar nomini kiriting..."
-        value={city}
-        onChange={(e) => setCity(e.target.value)}
-      />
-      <button onClick={fetchWeather}>Ob-havoni ko'rsatish</button>
+    <div className="App">
+      <h1>OpenAI API bilan React Ilovasi</h1>
+      <form onSubmit={handleSubmit}>
+        <textarea
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder="Matn kiriting..."
+          rows={5}
+          cols={50}
+        />
+        <br />
+        <button type="submit">Yuborish</button>
+      </form>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {weather && (
+      {responseText && (
         <div>
-          <h2>{weather.name}, {weather.sys.country}</h2>
-          <p>Harorat: {weather.main.temp} °C</p>
-          <p>Havo: {weather.weather[0].description}</p>
-          <p>Namlik: {weather.main.humidity}%</p>
-          <p>Shamol tezligi: {weather.wind.speed} m/s</p>
+          <h2>Javob:</h2>
+          <p>{responseText}</p>
         </div>
       )}
     </div>
   );
-};
+}
 
 export default App;
